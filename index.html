@@ -77,6 +77,53 @@
             }
         }
 
+        /* --- CRT OVERLAY STYLES --- */
+        #crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        #crt-overlay::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            z-index: 2;
+        }
+
+        #crt-overlay::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 1;
+            animation: flicker 0.15s infinite;
+            box-shadow: inset 0 0 2cm rgba(0,0,0,0.8);
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.1; }
+            20% { opacity: 1; }
+            80% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+
         /* --- SPLASH SCREEN STYLES --- */
         #splash-container {
             position: absolute;
@@ -225,7 +272,7 @@
         /* --- Top bar layout and styling --- */
         #top-bar {
             display: grid;
-            grid-template-columns: 1fr auto 1fr; /* SCORE | LIVES | FRAGS */
+            grid-template-columns: 1fr 120px 1fr; /* SCORE | LIVES | FRAGS */
             width: 100%;
             color: var(--fragment-accent-color-ui); /* UI Color */
             text-shadow: 0 0 8px var(--fragment-accent-color-ui); /* UI Glow */
@@ -236,15 +283,63 @@
         
         #top-bar > div {
             padding: 10px 15px;
+            display: flex;
+            align-items: center;
         }
 
-        #score { text-align: left; }
+        #score { justify-content: flex-start; }
         #lives { 
-            text-align: center; 
+            justify-content: center;
             border-left: 2px solid var(--fragment-accent-color-ui);
             border-right: 2px solid var(--fragment-accent-color-ui);
         }
-        #fragments { text-align: right; }
+        
+        /* --- Fragment Status Bar --- */
+        #fragment-status {
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        #fragment-icons {
+            display: flex;
+            gap: 5px;
+        }
+        .fragment-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .fragment-icon.unspawned {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .fragment-icon.in_play {
+            background-color: var(--fragment-main-color);
+            border: 1px solid var(--fragment-light-color);
+            box-shadow: 0 0 8px var(--fragment-main-color);
+            animation: pulse-icon 1.5s infinite;
+        }
+        .fragment-icon.following {
+            background-color: var(--player-main-color);
+            border: 1px solid var(--player-light-color);
+            box-shadow: 0 0 8px var(--player-main-color);
+        }
+        .fragment-icon.rescued {
+            background-color: var(--fragment-accent-color-ui);
+            border: 1px solid #ffff66;
+            box-shadow: 0 0 8px var(--fragment-accent-color-ui);
+        }
+        .fragment-icon.lost {
+            background-color: #ff3333;
+            border: 1px solid #ff9999;
+            box-shadow: 0 0 8px #ff3333;
+        }
+
+        @keyframes pulse-icon {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
 
         /* --- Style for message overlays to match buttons --- */
         #message-overlay {
@@ -336,6 +431,7 @@
     </style>
 </head>
 <body>
+    <div id="crt-overlay"></div>
 
     <!-- Splash Screen Elements -->
     <canvas id="background-canvas"></canvas>
@@ -362,7 +458,10 @@
                 <div id="top-bar">
                     <div id="score">SCORE: 0</div>
                     <div id="lives">LIVES: 3</div>
-                    <div id="fragments">FRAGS: 0 / 8</div>
+                    <div id="fragment-status">
+                        <span>FRAGS:&nbsp;</span>
+                        <div id="fragment-icons"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -512,7 +611,7 @@
 
         // --- Global Audio Variables ---
         let audioInitialized = false;
-        let bassPulse, choirSynth, shootSynth, explosionSynth, alarmSynth, decodedMessageSynth, waveCompleteSynth, bootKeySynth, extraLifeSynth, gameOverSynth, playerCollisionSynth, startGameSynth, keyClatterLoop, fragmentDestroyedSynth, rescueBonusSynth;
+        let bassPulse, choirSynth, shootSynth, explosionSynth, alarmSynth, decodedMessageSynth, waveCompleteSynth, bootKeySynth, extraLifeSynth, gameOverSynth, startGameSynth, keyClatterLoop, fragmentDestroyedSynth, rescueBonusSynth;
         const fragmentScale = ['C3', 'Eb3', 'G3', 'Bb3', 'C4', 'Eb4', 'G4', 'Bb4'];
 
         // --- Single, comprehensive audio initialization function ---
@@ -625,26 +724,6 @@
                     volume: -2
                 }).toDestination();
 
-                playerCollisionSynth = new Tone.PolySynth(Tone.FMSynth, {
-                    harmonicity: 1.5,
-                    modulationIndex: 20,
-                    oscillator: { type: "square" },
-                    envelope: {
-                        attack: 0.001,
-                        decay: 0.1,
-                        sustain: 0.01,
-                        release: 0.1
-                    },
-                    modulation: { type: "sawtooth" },
-                    modulationEnvelope: {
-                        attack: 0.002,
-                        decay: 0.2,
-                        sustain: 0,
-                        release: 0.2
-                    },
-                    volume: -10
-                }).toDestination();
-
                 startGameSynth = new Tone.PolySynth(Tone.Synth, {
                     oscillator: { type: 'triangle' },
                     envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 },
@@ -742,7 +821,7 @@
                     const p = project(star);
                     if (p) bgCtx.fillRect(p.x, p.y, p.scale * 1.5, p.scale * 1.5);
                 });
-                bgCtx.strokeStyle = hexToRgba(playerMainColor, 0.3);
+                bgCtx.strokeStyle = hexToRgba(glowColor, 0.3);
                 bgCtx.lineWidth = 1;
                 mountains.forEach((range, index) => {
                     range.forEach(p => { p.offsetZ = (p.offsetZ - mountainSpeed * (index + 1)) % 200; });
@@ -801,7 +880,7 @@
             const ctx = canvas.getContext('2d');
             const scoreEl = document.getElementById('score');
             const livesEl = document.getElementById('lives');
-            const fragmentsEl = document.getElementById('fragments');
+            const fragmentIconsEl = document.getElementById('fragment-icons');
             const messageOverlay = document.getElementById('message-overlay');
             const touchControls = document.getElementById('touch-controls');
             const joystickArea = document.getElementById('joystick-area');
@@ -821,14 +900,13 @@
             let lives = initialLives;
             let wave = 1;
             let nextLifeScore = 100000;
-            let fragmentsRescued = 0, fragmentsLost = 0, totalFragments = 8, fragmentsSpawned = 0;
+            let fragmentsRescued = 0, fragmentsLost = 0, totalFragments = 8, fragmentSpawnTimer = 0;
             let waveFragmentScore = 0; 
-            let fragmentSpawnTimer = 0;
             let perfectRun = true;
             let lastTime = 0;
             let animationFrameId;
-            let player, landscape, dataStorm;
-            let bullets = [], enemies = [], fragments = [], particles = [];
+            let player, landscape, dataStorm, uplinkZone;
+            let bullets = [], enemies = [], fragments = [], particles = [], fragmentManifest = [], fragmentIconEls = [];
             const keys = {};
             let isShooting = false, joystickActive = false;
             let joystickStart = { x: 0, y: 0 }, joystickCurrent = { x: 0, y: 0 };
@@ -851,8 +929,6 @@
                     this.isInvincible = false;
                     this.invincibilityTimer = 0;
                     this.invincibilityDuration = 180;
-                    this.rescueMultiplier = 0;
-                    this.justTriggeredBonusSound = false;
                 }
                 update() {
                     if (this.isInvincible) { this.invincibilityTimer--; if (this.invincibilityTimer <= 0) this.isInvincible = false; }
@@ -868,16 +944,6 @@
                     this.trail.push({ x: this.x, y: this.y }); if (this.trail.length > 20) this.trail.shift();
                     if (this.shootCooldown > 0) this.shootCooldown--; if (isShooting && this.shootCooldown === 0) { this.shoot(); this.shootCooldown = 10; }
                     if(audioInitialized) { const velocityMagnitude = Math.sqrt(this.vx * this.vx + this.vy * this.vy); bassPulse.volume.value = Tone.gainToDb((velocityMagnitude / 15) * 0.175); }
-                
-                    const followingCount = fragments.filter(f => f.state === 'following').length;
-                    if (followingCount === 0) {
-                        this.rescueMultiplier = 0;
-                    } else if (this.x < 100 && this.rescueMultiplier === 0) {
-                        this.rescueMultiplier = followingCount;
-                        this.justTriggeredBonusSound = false;
-                    } else if (this.x > 150) {
-                        this.rescueMultiplier = 0;
-                    }
                 }
                 shoot() {
                     bullets.push(new Bullet(this.x + this.width / 2, this.y));
@@ -948,22 +1014,25 @@
                     this.x = x;
                     this.y = y;
                     this.size = 24;
-                    this.state = 'idle';
+                    this.state = 'in_play';
                     this.target = null;
                     this.index = index;
                     this.speedX = -1;
                     this.pulseTimer = Math.random() * Math.PI * 2;
                 }
                 update() {
-                    if (this.state === 'idle') {
+                    if (this.state === 'in_play') {
                         this.x += this.speedX;
                         this.pulseTimer += 0.1;
                         if (this.x < -this.size) {
                             this.state = 'lost';
-                            fragmentsLost++;
-                            perfectRun = false;
                         }
                     } else if (this.state === 'following') {
+                        if (!this.target) {
+                            this.state = 'in_play';
+                            fragmentManifest[this.index].status = 'in_play';
+                            return;
+                        }
                         const targetX = this.target.x - 60 - (fragments.filter(f => f.state === 'following').indexOf(this) * 25);
                         const targetY = this.target.y;
                         const dx = targetX - this.x;
@@ -973,21 +1042,6 @@
                         
                         if (this.x < 20) {
                             this.state = 'rescued';
-                            fragmentsRescued++;
-                            const multiplier = Math.max(1, player.rescueMultiplier);
-                            const points = 1000 * multiplier;
-                            score += points;
-                            waveFragmentScore += points;
-                            if (audioInitialized) {
-                                const note = fragmentScale[this.index % fragmentScale.length];
-                                choirSynth.triggerAttack(note);
-                                activeChoirNotes.push(note);
-
-                                if (multiplier > 1 && !player.justTriggeredBonusSound) {
-                                    rescueBonusSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '8n', Tone.now());
-                                    player.justTriggeredBonusSound = true;
-                                }
-                            }
                         }
                     }
                 }
@@ -1008,8 +1062,8 @@
                     ctx.save();
                     ctx.translate(this.x, this.y);
                     
-                    if (this.state === 'idle') {
-                        const scale = 1 + Math.sin(this.pulseTimer) * 0.1;
+                    if (this.state === 'in_play') {
+                        const scale = 1 + Math.sin(this.pulseTimer) * 0.3;
                         ctx.scale(scale, scale);
                     }
 
@@ -1068,7 +1122,7 @@
                     ctx.translate(this.x, this.y);
 
                     if (this.type === 'seeker') {
-                        const scale = 1 + Math.sin(this.pulseTimer) * 0.1;
+                        const scale = 1 + Math.sin(this.pulseTimer) * 0.3;
                         ctx.scale(scale, scale);
                     }
                     
@@ -1153,7 +1207,7 @@
                     }
                 }
                 draw() {
-                    ctx.strokeStyle = hexToRgba(playerMainColor, 0.3);
+                    ctx.strokeStyle = hexToRgba(glowColor, 0.3);
                     ctx.lineWidth = 1;
                     ctx.shadowColor = glowColor;
                     ctx.shadowBlur = 10;
@@ -1175,7 +1229,7 @@
                             ctx.moveTo(0, y);
                             ctx.lineTo(width, y);
                         }
-                        ctx.strokeStyle = hexToRgba(playerMainColor, 0.1);
+                        ctx.strokeStyle = hexToRgba(glowColor, 0.1);
                         ctx.stroke();
                     }
                     ctx.shadowBlur = 0;
@@ -1214,6 +1268,61 @@
                     });
                 }
             }
+             class DataUplinkZone {
+                constructor() {
+                    this.width = 50;
+                    this.flashTimer = 0;
+                    this.flashColor = null;
+                }
+                update() {
+                    if (this.flashTimer > 0) this.flashTimer--;
+                }
+                triggerFlash(color = null) {
+                    this.flashTimer = 15; // Flash for 1/4 second (15 frames at 60fps)
+                    this.flashColor = color;
+                }
+                draw() {
+                    ctx.save();
+                    // Draw grid
+                    ctx.strokeStyle = hexToRgba(glowColor, 0.2);
+                    ctx.lineWidth = 0.5;
+                    for (let x = 0; x < this.width; x += 20) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, 0);
+                        ctx.lineTo(x, height);
+                        ctx.stroke();
+                    }
+                    for (let y = height; y > 0; y -= 20) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(this.width, y);
+                        ctx.stroke();
+                    }
+
+                    // Draw text
+                    let textColor = hexToRgba(glowColor, 0.3);
+                    if (this.flashTimer > 0) {
+                        if (this.flashColor === 'white') {
+                            textColor = 'rgba(255, 255, 255, 0.9)';
+                        } else {
+                            textColor = hexToRgba(glowColor, 0.7);
+                        }
+                    }
+
+                    ctx.fillStyle = textColor;
+                    ctx.font = "36px 'VT323', monospace";
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    ctx.save();
+                    ctx.translate(this.width / 2, height / 2);
+                    ctx.rotate(-Math.PI / 2);
+                    ctx.fillText('<< FRAGMENT UPLINK >>', 0, 0);
+                    ctx.restore();
+                    
+                    ctx.restore();
+                }
+            }
 
             function startWave(waveNumber) {
                 gameState = 'wave_end'; 
@@ -1223,6 +1332,7 @@
                 enemies = [];
                 bullets = [];
                 particles = [];
+                fragments = [];
 
                 const perfectBonus = perfectRun ? 5000 : 0;
                 score += perfectBonus;
@@ -1248,11 +1358,15 @@
 
                     fragmentsRescued = 0; 
                     fragmentsLost = 0; 
-                    fragmentsSpawned = 0; 
-                    fragmentSpawnTimer = 0; 
-                    perfectRun = true; 
                     waveFragmentScore = 0;
-                    fragments = []; 
+                    perfectRun = true; 
+                    fragmentSpawnTimer = 3;
+                    
+                    fragmentManifest = [];
+                    for(let i = 0; i < totalFragments; i++) {
+                        fragmentManifest.push({ id: i, status: 'unspawned' });
+                    }
+                    
                     if(audioInitialized) choirSynth.releaseAll(); 
                     activeChoirNotes = [];
                     
@@ -1270,6 +1384,23 @@
                 }, 4000);
             }
 
+            function setupFragmentUI() {
+                fragmentIconsEl.innerHTML = '';
+                fragmentIconEls = [];
+                for(let i = 0; i < totalFragments; i++) {
+                    const icon = document.createElement('div');
+                    icon.className = 'fragment-icon';
+                    fragmentIconsEl.appendChild(icon);
+                    fragmentIconEls.push(icon);
+                }
+            }
+
+            function updateFragmentStatusUI() {
+                for(let i = 0; i < fragmentManifest.length; i++) {
+                    fragmentIconEls[i].className = `fragment-icon ${fragmentManifest[i].status}`;
+                }
+            }
+
             function startGame() {
                 if(audioInitialized) {
                     const now = Tone.now();
@@ -1285,9 +1416,20 @@
                 uiContainer.style.display = 'flex';
 
                 score = 0; lives = initialLives; wave = 1; nextLifeScore = 100000;
-                fragmentsRescued = 0; fragmentsLost = 0; fragmentsSpawned = 0; fragmentSpawnTimer = 0; perfectRun = true; waveFragmentScore = 0;
+                fragmentsRescued = 0; fragmentsLost = 0; waveFragmentScore = 0;
+                perfectRun = true; 
+                fragmentSpawnTimer = 3; // Initial delay
+                
+                fragmentManifest = [];
+                for(let i = 0; i < totalFragments; i++) {
+                    fragmentManifest.push({ id: i, status: 'unspawned' });
+                }
+                
                 player = new Player(); bullets = []; enemies = []; particles = []; fragments = [];
-                landscape = new WireframeLandscape(); dataStorm = new DataStorm();
+                landscape = new WireframeLandscape(); dataStorm = new DataStorm(); uplinkZone = new DataUplinkZone();
+                
+                setupFragmentUI();
+
                 messageOverlay.style.display = 'none'; gameState = 'playing';
                 lastTime = performance.now();
                 if(animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -1298,7 +1440,7 @@
                 if (!player || player.isInvincible) return;
                 lives--;
                 for (let i = 0; i < 20; i++) particles.push(new Particle(player.x, player.y, playerMainColor));
-                if(audioInitialized) playerCollisionSynth.triggerAttackRelease("C6", "8n");
+                if(audioInitialized) fragmentDestroyedSynth.triggerAttackRelease("C3", "8n");
                 if (lives < 0) {
                     endGame('lose');
                 } else { 
@@ -1336,6 +1478,7 @@
                 player.update(); 
                 landscape.update(); 
                 dataStorm.update();
+                uplinkZone.update();
 
                 bullets = bullets.filter(b => b.x < width); 
                 bullets.forEach(b => b.update());
@@ -1359,21 +1502,67 @@
                     alarmCooldown = 60; 
                 }
 
-                fragmentSpawnTimer -= dt; 
-                if (fragmentSpawnTimer <= 0 && fragmentsSpawned < totalFragments) { 
-                    fragments.push(new Fragment(width + 20, Math.random() * height, fragmentsSpawned)); 
-                    fragmentsSpawned++; 
-                    fragmentSpawnTimer = Math.max(3, 15 - wave * 0.75); 
+                fragmentSpawnTimer -= dt;
+                const spawnedFragments = fragmentManifest.filter(f => f.status !== 'unspawned').length;
+                if (fragmentSpawnTimer <= 0 && spawnedFragments < totalFragments) {
+                    const nextFragmentIndex = fragmentManifest.findIndex(f => f.status === 'unspawned');
+                    if(nextFragmentIndex !== -1) {
+                        fragments.push(new Fragment(width + 20, Math.random() * height, nextFragmentIndex)); 
+                        fragmentManifest[nextFragmentIndex].status = 'in_play';
+                        fragmentSpawnTimer = Math.max(3, 15 - wave * 0.75); // Reset timer
+                    }
                 }
-                fragments = fragments.filter(f => f.state !== 'rescued' && f.state !== 'lost'); 
+                
                 fragments.forEach(f => f.update());
                 
+                const justRescuedFragments = fragments.filter(f => f.state === 'rescued');
+                if (justRescuedFragments.length > 0) {
+                    const followingCount = fragments.filter(f => f.state === 'following').length;
+                    const totalInGroup = followingCount + justRescuedFragments.length;
+
+                    if (totalInGroup === 4) {
+                        if (audioInitialized) {
+                            rescueBonusSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '8n', Tone.now());
+                        }
+                        uplinkZone.triggerFlash('white');
+                    } else {
+                        uplinkZone.triggerFlash();
+                    }
+
+                    justRescuedFragments.forEach(fragment => {
+                        const points = 1000 * totalInGroup;
+                        score += points;
+                        waveFragmentScore += points;
+                        fragmentsRescued++;
+                        fragmentManifest[fragment.index].status = 'rescued';
+
+                        if (audioInitialized) {
+                            const note = fragmentScale[fragment.index % fragmentScale.length];
+                            choirSynth.triggerAttack(note);
+                            activeChoirNotes.push(note);
+                        }
+                    });
+                    
+                    fragments = fragments.filter(f => f.state !== 'rescued');
+                }
+                
+                const justLostFragments = fragments.filter(f => f.state === 'lost');
+                if (justLostFragments.length > 0) {
+                    justLostFragments.forEach(fragment => {
+                        fragmentsLost++;
+                        perfectRun = false;
+                        fragmentManifest[fragment.index].status = 'lost';
+                    });
+                    fragments = fragments.filter(f => f.state !== 'lost');
+                }
+
+
                 particles = particles.filter(p => p.life > 0); 
                 particles.forEach(p => p.update());
                 
                 bullets.forEach((bullet, bIndex) => { 
                     enemies.forEach((enemy, eIndex) => { 
-                        if (!bullet) return; // Guard against removed bullets
+                        if (!bullet) return;
                         const ex = enemy.x - enemy.width / 2;
                         const ey = enemy.y - enemy.height / 2;
                         if (bullet.x < ex + enemy.width && bullet.x + bullet.width > ex && bullet.y < ey + enemy.height && bullet.y + bullet.height > ey) {
@@ -1388,13 +1577,14 @@
                 
                 fragments.forEach(fragment => {
                     if (!player) return;
-                    if (fragment.state === 'idle') {
+                    if (fragment.state === 'in_play') {
                         const dx = player.x - fragment.x;
                         const dy = player.y - fragment.y;
                         const dist = Math.sqrt(dx * dx + dy * dy);
                         const followingCount = fragments.filter(f => f.state === 'following').length;
                         if (dist < 60 && followingCount < player.maxFollowing) {
                             fragment.state = 'following';
+                            fragmentManifest[fragment.index].status = 'following';
                             fragment.target = player;
                         }
                     }
@@ -1426,6 +1616,7 @@
                                     choirSynth.triggerRelease(note); 
                                     activeChoirNotes = activeChoirNotes.filter(n => n !== note); 
                                 } 
+                                fragmentManifest[fragment.index].status = 'lost';
                                 fragments.splice(fIndex, 1); 
                                 perfectRun = false; 
                                 fragmentsLost++; 
@@ -1444,23 +1635,28 @@
                         extraLifeSynth.triggerAttackRelease(['C5', 'G5', 'C6'], '8n', now);
                     }
                 }
+
+                updateFragmentStatusUI();
             }
 
             function draw() {
                 ctx.clearRect(0, 0, width, height);
                 ctx.imageSmoothingEnabled = false;
-                if (dataStorm) dataStorm.draw(); if (landscape) landscape.draw();
+                if (dataStorm) dataStorm.draw(); 
+                if (landscape) landscape.draw();
+                if (uplinkZone) uplinkZone.draw();
                 
                 drawWaveBackground();
 
                 particles.forEach(p => p.draw()); 
-                fragments.forEach(f => { if(f.state !== 'rescued') f.draw(); });
-                enemies.forEach(e => e.draw()); bullets.forEach(b => b.draw()); if (player) player.draw();
+                fragments.forEach(f => f.draw());
+                enemies.forEach(e => e.draw()); 
+                bullets.forEach(b => b.draw()); 
+                if (player) player.draw();
                 
                 if (gameState !== 'start') {
                     scoreEl.textContent = `SCORE: ${score}`; 
                     livesEl.textContent = `LIVES: ${Math.max(0, lives)}`; 
-                    fragmentsEl.textContent = `FRAGS: ${fragmentsRescued} / ${totalFragments}`;
                 }
             }
             
@@ -1469,7 +1665,7 @@
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
-                ctx.fillStyle = hexToRgba(playerMainColor, 0.1);
+                ctx.fillStyle = hexToRgba(glowColor, 0.1);
 
                 ctx.font = `bold clamp(2em, 5vw, 3em) 'Orbitron', sans-serif`;
                 ctx.fillText('WAVE', width / 2, height * 0.3);
@@ -1489,6 +1685,7 @@
                 enemies = [];
                 bullets = [];
                 particles = [];
+                fragments = [];
                 
                 if(audioInitialized) { 
                     bassPulse.stop(); 
