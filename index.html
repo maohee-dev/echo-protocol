@@ -33,10 +33,10 @@
             /* --- Wave-dependent Theme Colors (Initial values for Wave 1) --- */
             --glow-color: #ff4d94;
             --background-color: #0d001a;
-            --enemy-color: #ff4d94;
-            --enemy-dark-color: '#b30059';
-            --enemy-light-color: '#ff99c9';
-            --enemy-accent-color: '#00ffff';
+            --enemy-color: #00ffff;
+            --enemy-dark-color: #008080;
+            --enemy-light-color: #99ffff;
+            --enemy-accent-color: #ff66ff;
         }
 
         html, body {
@@ -348,7 +348,7 @@
             ECHO PROTOCOL
         </h1>
         <div id="game-info" class="hidden-on-load">
-            <p>CONTROLS: WASD/Arrows to Move | SPACE to Shoot</p>
+            <p>CONTROLS: WASD/Arrows to Move | SPACE to Shoot | P to Pause</p>
             <p>(Touch controls enabled on mobile)</p>
         </div>
         <button id="start-button" class="hidden-on-load">START GAME</button>
@@ -379,71 +379,23 @@
     <script>
         // --- THEME COLOR MANAGEMENT ---
         const palettes = [
-            { // 1. Neon Sunset (Hot Pink)
+            { // 1. Neon Sunset
                 '--glow-color': '#ff4d94',
                 '--background-color': '#0d001a',
-                '--enemy-color': '#ff4d94',
-                '--enemy-dark-color': '#b30059',
-                '--enemy-light-color': '#ff99c9',
-                '--enemy-accent-color': '#00ffff',
-            },
-            { // 2. Inferno (Red/Orange)
-                '--glow-color': '#ff3300',
-                '--background-color': '#1a0000',
-                '--enemy-color': '#00e5ff',
-                '--enemy-dark-color': '#007788',
-                '--enemy-light-color': '#99f5ff',
-                '--enemy-accent-color': '#ffcc00',
-            },
-            { // 3. Matrix (Green)
-                '--glow-color': '#33ff33',
-                '--background-color': '#000500',
-                '--enemy-color': '#ff00ff',
-                '--enemy-dark-color': '#800080',
-                '--enemy-light-color': '#ff99ff',
-                '--enemy-accent-color': '#ffffff',
-            },
-            { // 4. Abyss (Cyan/Dark Blue)
-                '--glow-color': '#00e6ff',
-                '--background-color': '#000b14',
-                '--enemy-color': '#ffcc00',
-                '--enemy-dark-color': '#886600',
-                '--enemy-light-color': '#ffee99',
-                '--enemy-accent-color': '#ff3d71',
-            },
-            { // 5. Solar Flare (Orange/Yellow)
-                '--glow-color': '#ffcc00',
-                '--background-color': '#330000',
-                '--enemy-color': '#9933ff',
-                '--enemy-dark-color': '#4d0099',
-                '--enemy-light-color': '#cc99ff',
-                '--enemy-accent-color': '#ffff00',
-            },
-            { // 6. Acid Burn (Lime Green/Yellow)
-                '--glow-color': '#bfff00',
-                '--background-color': '#111900',
-                '--enemy-color': '#ff00ff',
-                '--enemy-dark-color': '#800080',
-                '--enemy-light-color': '#ff99ff',
-                '--enemy-accent-color': '#ffffff',
-            },
-            { // 7. Nebula (Purple/Pink)
-                '--glow-color': '#ff00ff',
-                '--background-color': '#190033',
-                '--enemy-color': '#00ff99',
-                '--enemy-dark-color': '#00804d',
-                '--enemy-light-color': '#99ffcc',
+                '--enemy-color': '#00ffff',
+                '--enemy-dark-color': '#008080',
+                '--enemy-light-color': '#99ffff',
                 '--enemy-accent-color': '#ff66ff',
             },
-            { // 8. Glacial (White/Light Blue)
-                '--glow-color': '#ffffff',
-                '--background-color': '#00001a',
-                '--enemy-color': '#ff6666',
-                '--enemy-dark-color': '#990000',
-                '--enemy-light-color': '#ffcccc',
-                '--enemy-accent-color': '#99ffff',
+            { // 2. Synthwave
+                '--glow-color': '#F500FF',
+                '--background-color': '#20004A',
+                '--enemy-color': '#FFFF00',
+                '--enemy-dark-color': '#B3B300',
+                '--enemy-light-color': '#FFFF99',
+                '--enemy-accent-color': '#00FFFF',
             },
-            { // 9. Ghost (Monochrome White)
+            { // 3. Ghost
                 '--glow-color': '#ffffff',
                 '--background-color': '#000000',
                 '--enemy-color': '#cccccc',
@@ -451,13 +403,61 @@
                 '--enemy-light-color': '#f2f2f2',
                 '--enemy-accent-color': '#ff0000',
             },
-            { // 10. The Void (Black/Red/White)
-                '--glow-color': '#ff0000',
-                '--background-color': '#000000',
-                '--enemy-color': '#ffffff',
-                '--enemy-dark-color': '#808080',
-                '--enemy-light-color': '#f2f2f2',
-                '--enemy-accent-color': '#ff0000',
+            { // 4. Inferno
+                '--glow-color': '#ff3300',
+                '--background-color': '#1a0000',
+                '--enemy-color': '#00e5ff',
+                '--enemy-dark-color': '#007788',
+                '--enemy-light-color': '#99f5ff',
+                '--enemy-accent-color': '#ffcc00',
+            },
+            { // 5. Abyss
+                '--glow-color': '#00e6ff',
+                '--background-color': '#000b14',
+                '--enemy-color': '#ffcc00',
+                '--enemy-dark-color': '#886600',
+                '--enemy-light-color': '#ffee99',
+                '--enemy-accent-color': '#ff3d71',
+            },
+            { // 6. Solar Flare
+                '--glow-color': '#ffcc00',
+                '--background-color': '#330000',
+                '--enemy-color': '#9933ff',
+                '--enemy-dark-color': '#4d0099',
+                '--enemy-light-color': '#cc99ff',
+                '--enemy-accent-color': '#ffff00',
+            },
+            { // 7. Nebula
+                '--glow-color': '#ff00ff',
+                '--background-color': '#190033',
+                '--enemy-color': '#00ff99',
+                '--enemy-dark-color': '#00804d',
+                '--enemy-light-color': '#99ffcc',
+                '--enemy-accent-color': '#ff66ff',
+            },
+            { // 8. Acid Burn
+                '--glow-color': '#bfff00',
+                '--background-color': '#111900',
+                '--enemy-color': '#ff00ff',
+                '--enemy-dark-color': '#800080',
+                '--enemy-light-color': '#ff99ff',
+                '--enemy-accent-color': '#ffffff',
+            },
+            { // 9. Glacial
+                '--glow-color': '#ffffff',
+                '--background-color': '#00001a',
+                '--enemy-color': '#ff6666',
+                '--enemy-dark-color': '#990000',
+                '--enemy-light-color': '#ffcccc',
+                '--enemy-accent-color': '#99ffff',
+            },
+            { // 10. Matrix
+                '--glow-color': '#33ff33',
+                '--background-color': '#000500',
+                '--enemy-color': '#ff00ff',
+                '--enemy-dark-color': '#800080',
+                '--enemy-light-color': '#ff99ff',
+                '--enemy-accent-color': '#ffffff',
             }
         ];
 
@@ -531,7 +531,6 @@
                     volume: -25
                 }).toDestination();
 
-                // New "Rising Vrrt" Shoot Sound
                 shootSynth = new Tone.PolySynth(Tone.FMSynth, {
                     harmonicity: 1.5,
                     modulationIndex: 8,
@@ -552,14 +551,12 @@
                     volume: -12
                 }).toDestination();
 
-
                 explosionSynth = new Tone.PolySynth(Tone.NoiseSynth, {
                     noise: { type: 'white' },
                     envelope: { attack: 0.005, decay: 0.1, sustain: 0 },
                     volume: -10
                 }).toDestination();
                 
-                // New sound for fragment destruction
                 fragmentDestroyedSynth = new Tone.PolySynth(Tone.FMSynth, {
                     harmonicity: 0.8,
                     modulationIndex: 15,
@@ -567,7 +564,6 @@
                     volume: -10
                 }).toDestination();
 
-                // New sound for bonus rescue
                 rescueBonusSynth = new Tone.PolySynth(Tone.Synth, {
                     oscillator: { type: 'triangle' },
                     envelope: { attack: 0.01, decay: 0.4, sustain: 0.1, release: 0.2 },
@@ -615,10 +611,11 @@
 
                 keyClatterLoop.humanize = true;
 
-                extraLifeSynth = new Tone.PolySynth(Tone.Synth, {
-                    oscillator: { type: 'triangle' },
-                    envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 },
-                    volume: -8
+                extraLifeSynth = new Tone.PolySynth(Tone.FMSynth, {
+                    harmonicity: 1.2,
+                    modulationIndex: 10,
+                    envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.7 },
+                    volume: -5
                 }).toDestination();
 
                 gameOverSynth = new Tone.PolySynth(Tone.FMSynth, {
@@ -1060,10 +1057,6 @@
                     if (this.type === 'seeker' && player) {
                         const dy = player.y - this.y;
                         this.speedY = dy * 0.015;
-                        if (audioInitialized && alarmCooldown === 0) {
-                            alarmSynth.triggerAttackRelease("G5", "16n");
-                            alarmCooldown = 60; // 1 second cooldown
-                        }
                     }
                     this.x += this.speedX;
                     this.y += this.speedY;
@@ -1223,10 +1216,14 @@
             }
 
             function startWave(waveNumber) {
-                gameState = 'wave_end'; wave = waveNumber;
-                const themeIndex = (waveNumber - 1) % palettes.length;
-                applyTheme(palettes[themeIndex]);
-                updateThemeColors();
+                gameState = 'wave_end'; 
+                wave = waveNumber;
+                player = null; 
+                
+                enemies = [];
+                bullets = [];
+                particles = [];
+
                 const perfectBonus = perfectRun ? 5000 : 0;
                 score += perfectBonus;
                 
@@ -1245,8 +1242,19 @@
                 if(audioInitialized) waveCompleteSynth.triggerAttackRelease("C3", "2s");
                 
                 setTimeout(() => {
-                    fragmentsRescued = 0; fragmentsLost = 0; fragmentsSpawned = 0; fragmentSpawnTimer = 0; perfectRun = true; waveFragmentScore = 0;
-                    fragments = []; enemies = []; bullets = []; particles = []; if(audioInitialized) choirSynth.releaseAll(); activeChoirNotes = [];
+                    const themeIndex = (waveNumber - 1) % palettes.length;
+                    applyTheme(palettes[themeIndex]);
+                    updateThemeColors();
+
+                    fragmentsRescued = 0; 
+                    fragmentsLost = 0; 
+                    fragmentsSpawned = 0; 
+                    fragmentSpawnTimer = 0; 
+                    perfectRun = true; 
+                    waveFragmentScore = 0;
+                    fragments = []; 
+                    if(audioInitialized) choirSynth.releaseAll(); 
+                    activeChoirNotes = [];
                     
                     messageOverlay.innerHTML = '';
                     title.textContent = `WAVE ${wave}`;
@@ -1254,7 +1262,11 @@
                     messageOverlay.appendChild(title);
                     messageOverlay.appendChild(subtext);
 
-                    setTimeout(() => { messageOverlay.style.display = 'none'; gameState = 'playing'; }, 2000);
+                    setTimeout(() => { 
+                        player = new Player(); 
+                        messageOverlay.style.display = 'none'; 
+                        gameState = 'playing'; 
+                    }, 2000);
                 }, 4000);
             }
 
@@ -1283,31 +1295,85 @@
             }
 
             function loseLife() {
-                if (player.isInvincible) return;
+                if (!player || player.isInvincible) return;
                 lives--;
                 for (let i = 0; i < 20; i++) particles.push(new Particle(player.x, player.y, playerMainColor));
                 if(audioInitialized) playerCollisionSynth.triggerAttackRelease("C6", "8n");
-                if (lives < 0) endGame('lose');
-                else { player.isInvincible = true; player.invincibilityTimer = player.invincibilityDuration; player.x = width / 4; player.y = height / 2; player.vx = 0; player.vy = 0; }
+                if (lives < 0) {
+                    endGame('lose');
+                } else { 
+                    player.isInvincible = true; 
+                    player.invincibilityTimer = player.invincibilityDuration; 
+                    player.x = width / 4; 
+                    player.y = height / 2; 
+                    player.vx = 0; 
+                    player.vy = 0; 
+                }
+            }
+
+            function togglePause() {
+                if (gameState === 'playing') {
+                    gameState = 'paused';
+                    if(audioInitialized) Tone.Destination.mute = true;
+                    
+                    messageOverlay.innerHTML = '<h1>PAUSED</h1>';
+                    messageOverlay.style.display = 'block';
+
+                } else if (gameState === 'paused') {
+                    gameState = 'playing';
+                    if(audioInitialized) Tone.Destination.mute = false;
+
+                    messageOverlay.style.display = 'none';
+                    lastTime = performance.now();
+                }
             }
 
             function update(dt) {
-                if (gameState !== 'playing') return;
+                if (gameState !== 'playing' || !player) return;
                 
                 if (alarmCooldown > 0) alarmCooldown--;
 
-                player.update(); landscape.update(); dataStorm.update();
-                bullets = bullets.filter(b => b.x < width); bullets.forEach(b => b.update());
-                const enemyCount = 5 + wave * 2; if (Math.random() < (0.02 + wave * 0.002) && enemies.length < enemyCount) enemies.push(new Enemy(wave));
-                enemies = enemies.filter(e => e.x > -e.width); enemies.forEach(e => e.update());
-                fragmentSpawnTimer -= dt; if (fragmentSpawnTimer <= 0 && fragmentsSpawned < totalFragments) { fragments.push(new Fragment(width + 20, Math.random() * height, fragmentsSpawned)); fragmentsSpawned++; fragmentSpawnTimer = Math.max(3, 15 - wave * 0.75); }
-                fragments = fragments.filter(f => f.state !== 'rescued' && f.state !== 'lost'); fragments.forEach(f => f.update());
+                player.update(); 
+                landscape.update(); 
+                dataStorm.update();
+
+                bullets = bullets.filter(b => b.x < width); 
+                bullets.forEach(b => b.update());
+
+                const enemyCount = 5 + wave * 2; 
+                if (Math.random() < (0.02 + wave * 0.002) && enemies.length < enemyCount) {
+                    enemies.push(new Enemy(wave));
+                }
+                enemies = enemies.filter(e => e.x > -e.width); 
+                
+                let seekerOnScreen = false;
+                enemies.forEach(e => {
+                    e.update();
+                    if (e.type === 'seeker') {
+                        seekerOnScreen = true;
+                    }
+                });
+
+                if (seekerOnScreen && audioInitialized && alarmCooldown === 0) {
+                    alarmSynth.triggerAttackRelease("G5", "16n", Tone.now());
+                    alarmCooldown = 60; 
+                }
+
+                fragmentSpawnTimer -= dt; 
+                if (fragmentSpawnTimer <= 0 && fragmentsSpawned < totalFragments) { 
+                    fragments.push(new Fragment(width + 20, Math.random() * height, fragmentsSpawned)); 
+                    fragmentsSpawned++; 
+                    fragmentSpawnTimer = Math.max(3, 15 - wave * 0.75); 
+                }
+                fragments = fragments.filter(f => f.state !== 'rescued' && f.state !== 'lost'); 
+                fragments.forEach(f => f.update());
                 
                 particles = particles.filter(p => p.life > 0); 
                 particles.forEach(p => p.update());
                 
                 bullets.forEach((bullet, bIndex) => { 
                     enemies.forEach((enemy, eIndex) => { 
+                        if (!bullet) return; // Guard against removed bullets
                         const ex = enemy.x - enemy.width / 2;
                         const ey = enemy.y - enemy.height / 2;
                         if (bullet.x < ex + enemy.width && bullet.x + bullet.width > ex && bullet.y < ey + enemy.height && bullet.y + bullet.height > ey) {
@@ -1321,6 +1387,7 @@
                 });
                 
                 fragments.forEach(fragment => {
+                    if (!player) return;
                     if (fragment.state === 'idle') {
                         const dx = player.x - fragment.x;
                         const dy = player.y - fragment.y;
@@ -1334,7 +1401,7 @@
                 });
                 
                 enemies.forEach(enemy => { 
-                    if (player.isInvincible) return;
+                    if (!player || player.isInvincible) return;
                     const px = player.x - player.width / 2;
                     const py = player.y - player.height / 2;
                     const ex = enemy.x - enemy.width / 2;
@@ -1374,14 +1441,14 @@
                     nextLifeScore += 100000;
                     if(audioInitialized) {
                         const now = Tone.now();
-                        extraLifeSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '8n', now);
+                        extraLifeSynth.triggerAttackRelease(['C5', 'G5', 'C6'], '8n', now);
                     }
                 }
             }
 
             function draw() {
                 ctx.clearRect(0, 0, width, height);
-                ctx.imageSmoothingEnabled = false; // For crisp pixels
+                ctx.imageSmoothingEnabled = false;
                 if (dataStorm) dataStorm.draw(); if (landscape) landscape.draw();
                 
                 drawWaveBackground();
@@ -1390,7 +1457,7 @@
                 fragments.forEach(f => { if(f.state !== 'rescued') f.draw(); });
                 enemies.forEach(e => e.draw()); bullets.forEach(b => b.draw()); if (player) player.draw();
                 
-                if (gameState === 'playing' || gameState === 'wave_end') {
+                if (gameState !== 'start') {
                     scoreEl.textContent = `SCORE: ${score}`; 
                     livesEl.textContent = `LIVES: ${Math.max(0, lives)}`; 
                     fragmentsEl.textContent = `FRAGS: ${fragmentsRescued} / ${totalFragments}`;
@@ -1417,6 +1484,11 @@
                 gameState = 'lose'; 
                 cancelAnimationFrame(animationFrameId); 
                 animationFrameId = null;
+                player = null; 
+
+                enemies = [];
+                bullets = [];
+                particles = [];
                 
                 if(audioInitialized) { 
                     bassPulse.stop(); 
@@ -1452,9 +1524,21 @@
             }
 
             function animate(timestamp) {
-                if (gameState === 'lose') return;
-                const dt = (timestamp - lastTime) / 1000; lastTime = timestamp;
-                if (gameState === 'playing') update(dt);
+                if (gameState === 'lose') {
+                    if (animationFrameId) {
+                        draw();
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
+                    return;
+                }
+                const dt = (timestamp - lastTime) / 1000; 
+                lastTime = timestamp;
+                
+                if (gameState === 'playing') {
+                    update(dt);
+                }
+                
                 draw();
                 animationFrameId = requestAnimationFrame(animate);
             }
@@ -1499,10 +1583,38 @@
                     joystickKnob.style.transform = `translate(40px, 40px)`;
                 }
             }
+            
+            window.removeEventListener('resize', resizeGame);
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+
+            function handleKeyDown(e) {
+                const key = e.key.toLowerCase();
+                if (key === 'p') {
+                    togglePause();
+                    return;
+                }
+                
+                if (gameState !== 'playing') return;
+
+                keys[key] = true;
+                if (key === ' ') {
+                    e.preventDefault();
+                    isShooting = true;
+                }
+            }
+
+            function handleKeyUp(e) {
+                const key = e.key.toLowerCase();
+                keys[key] = false;
+                if (key === ' ') {
+                    isShooting = false;
+                }
+            }
 
             window.addEventListener('resize', resizeGame);
-            window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; if (e.key === ' ') { e.preventDefault(); isShooting = true; } });
-            window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; if (e.key === ' ') isShooting = false; });
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
             
             const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
             if (isTouchDevice) {
