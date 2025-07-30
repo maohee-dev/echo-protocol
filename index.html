@@ -1302,8 +1302,8 @@
                     // Draw text
                     let textColor = hexToRgba(glowColor, 0.3);
                     if (this.flashTimer > 0) {
-                        if (this.flashColor === 'white') {
-                            textColor = 'rgba(255, 255, 255, 0.9)';
+                        if (this.flashColor === 'accent') {
+                             textColor = 'rgba(255, 225, 0, 0.9)'; // UI Accent Color Flash
                         } else {
                             textColor = hexToRgba(glowColor, 0.7);
                         }
@@ -1524,7 +1524,7 @@
                         if (audioInitialized) {
                             rescueBonusSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '8n', Tone.now());
                         }
-                        uplinkZone.triggerFlash('white');
+                        uplinkZone.triggerFlash('accent');
                     } else {
                         uplinkZone.triggerFlash();
                     }
@@ -1692,7 +1692,6 @@
                     choirSynth.releaseAll(); 
                     activeChoirNotes = []; 
                     const now = Tone.now();
-                    // --- FIX: Use the startGameSynth to play the reversed arpeggio for simplicity and consistency. ---
                     const gameOverNotes = ['C5', 'G4', 'E4', 'C4'];
                     gameOverNotes.forEach((note, index) => {
                         startGameSynth.triggerAttackRelease(note, '16n', now + index * 0.1);
