@@ -554,7 +554,7 @@
                 '--glow-color': '#33ff33',
                 '--background-color': '#000500',
                 '--enemy-color': '#ff00ff',
-                '--enemy-dark-color': '#800080',
+                '--enemy-dark-color': '#808080',
                 '--enemy-light-color': '#ff99ff',
                 '--enemy-accent-color': '#ffffff',
             }
@@ -611,7 +611,7 @@
 
         // --- Global Audio Variables ---
         let audioInitialized = false;
-        let bassPulse, choirSynth, shootSynth, explosionSynth, alarmSynth, decodedMessageSynth, waveCompleteSynth, bootKeySynth, extraLifeSynth, gameOverSynth, startGameSynth, keyClatterLoop, fragmentDestroyedSynth, rescueBonusSynth;
+        let bassPulse, choirSynth, shootSynth, explosionSynth, alarmSynth, decodedMessageSynth, waveCompleteSynth, bootKeySynth, extraLifeSynth, gameOverSynth, startGameSynth, keyClatterLoop, fragmentDestroyedSynth, rescueBonusSynth, playerCollisionSynth;
         const fragmentScale = ['C3', 'Eb3', 'G3', 'Bb3', 'C4', 'Eb4', 'G4', 'Bb4'];
 
         // --- Single, comprehensive audio initialization function ---
@@ -722,6 +722,13 @@
                     modulationIndex: 10,
                     envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 1 },
                     volume: -2
+                }).toDestination();
+
+                playerCollisionSynth = new Tone.PolySynth(Tone.FMSynth, {
+                    harmonicity: 0.8,
+                    modulationIndex: 15,
+                    envelope: { attack: 0.01, decay: 0.5, sustain: 0 },
+                    volume: -10
                 }).toDestination();
 
                 startGameSynth = new Tone.PolySynth(Tone.Synth, {
@@ -1440,7 +1447,7 @@
                 if (!player || player.isInvincible) return;
                 lives--;
                 for (let i = 0; i < 20; i++) particles.push(new Particle(player.x, player.y, playerMainColor));
-                if(audioInitialized) fragmentDestroyedSynth.triggerAttackRelease("C3", "8n");
+                if(audioInitialized) playerCollisionSynth.triggerAttackRelease("C3", "8n");
                 if (lives < 0) {
                     endGame('lose');
                 } else { 
