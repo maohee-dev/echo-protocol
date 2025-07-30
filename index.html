@@ -611,7 +611,6 @@
 
         // --- Global Audio Variables ---
         let audioInitialized = false;
-        // --- FIX: Removed gameOverSynth from the global variables ---
         let bassPulse, choirSynth, shootSynth, explosionSynth, alarmSynth, decodedMessageSynth, waveCompleteSynth, bootKeySynth, extraLifeSynth, startGameSynth, keyClatterLoop, fragmentDestroyedSynth, rescueBonusSynth, playerCollisionSynth;
         const fragmentScale = ['C3', 'Eb3', 'G3', 'Bb3', 'C4', 'Eb4', 'G4', 'Bb4'];
 
@@ -717,8 +716,6 @@
                     envelope: { attack: 0.01, decay: 0.3, sustain: 0.1, release: 0.7 },
                     volume: -5
                 }).toDestination();
-
-                // --- FIX: Removed the separate gameOverSynth definition ---
 
                 playerCollisionSynth = new Tone.PolySynth(Tone.FMSynth, {
                     harmonicity: 0.8,
