@@ -45,8 +45,11 @@
             overflow: hidden;
             height: 100%;
             width: 100%;
-            background-color: var(--background-color);
+            background-color: #000; /* Black background for the faux window effect */
             color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         @keyframes fadeIn {
@@ -139,6 +142,7 @@
             text-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color), 3px 3px 5px rgba(0,0,0,0.7);
             font-family: 'VT323', monospace;
             cursor: pointer;
+            background-color: var(--background-color);
         }
 
         /* --- Centered and enlarged the click prompt --- */
@@ -237,14 +241,19 @@
         /* --- MAIN GAME STYLES --- */
         #game-container {
             display: none;
-            width: 100%;
-            height: 100%;
+            /* --- FIX: Set fixed size for the game window --- */
+            width: 800px;
+            height: 600px;
             position: relative;
             font-family: 'Orbitron', sans-serif;
+            /* --- FIX: Add a glow to simulate a monitor bezel --- */
+            box-shadow: 0 0 15px 2px var(--glow-color);
+            overflow: hidden; /* Keep touch controls contained */
         }
 
         #gameCanvas {
             display: block;
+            /* --- FIX: Canvas fills the fixed-size container --- */
             width: 100%;
             height: 100%;
             position: absolute;
@@ -252,6 +261,7 @@
             left: 0;
             z-index: 1;
             image-rendering: pixelated; /* Ensures pixel art scales crisply */
+            background-color: var(--background-color);
         }
 
         #ui-container {
@@ -378,7 +388,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 35%;
+            height: 100%; /* Cover container for positioning */
             z-index: 5;
             display: none;
             pointer-events: none;
@@ -423,7 +433,7 @@
             text-shadow: 0 0 5px var(--enemy-color);
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 820px) { /* Adjusted for new canvas size */
             #top-bar { font-size: 1em; }
             #message-overlay h1 { font-size: 2em; }
             #message-overlay p { font-size: 0.9em; }
@@ -1425,8 +1435,17 @@
                     fragmentManifest.push({ id: i, status: 'unspawned' });
                 }
                 
-                player = new Player(); bullets = []; enemies = []; particles = []; fragments = [];
-                landscape = new WireframeLandscape(); dataStorm = new DataStorm(); uplinkZone = new DataUplinkZone();
+                // --- FIX: Call resizeGame() BEFORE creating game objects ---
+                resizeGame(); 
+                
+                player = new Player(); 
+                bullets = []; 
+                enemies = []; 
+                particles = []; 
+                fragments = [];
+                landscape = new WireframeLandscape(); 
+                dataStorm = new DataStorm(); 
+                uplinkZone = new DataUplinkZone();
                 
                 setupFragmentUI();
 
@@ -1464,9 +1483,7 @@
                 } else if (gameState === 'paused') {
                     gameState = 'playing';
                     if(audioInitialized) Tone.Destination.mute = false;
-
-                    messageOverlay.style.display = 'none';
-                    lastTime = performance.now();
+                    lastTime = performance.now(); // Reset timer after unpausing
                 }
             }
 
@@ -1729,10 +1746,10 @@
                     }
                     return;
                 }
-                const dt = (timestamp - lastTime) / 1000; 
-                lastTime = timestamp;
                 
-                if (gameState === 'playing') {
+                if(gameState !== 'paused') {
+                    const dt = (timestamp - lastTime) / 1000; 
+                    lastTime = timestamp;
                     update(dt);
                 }
                 
@@ -1741,9 +1758,11 @@
             }
 
             function resizeGame() {
-                width = window.innerWidth; height = window.innerHeight;
-                canvas.width = width; canvas.height = height;
-                if(landscape) landscape.generatePoints();
+                // --- FIX: Set fixed game dimensions ---
+                width = 800;
+                height = 600;
+                canvas.width = width;
+                canvas.height = height;
             }
 
             function handlePointerDown(e) {
@@ -1781,7 +1800,8 @@
                 }
             }
             
-            window.removeEventListener('resize', resizeGame);
+            // --- FIX: Remove the game resize listener, as it's now fixed size ---
+            // window.removeEventListener('resize', resizeGame);
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
 
@@ -1809,7 +1829,7 @@
                 }
             }
 
-            window.addEventListener('resize', resizeGame);
+            // window.addEventListener('resize', resizeGame);
             window.addEventListener('keydown', handleKeyDown);
             window.addEventListener('keyup', handleKeyUp);
             
@@ -1822,7 +1842,7 @@
                 window.addEventListener('touchend', handlePointerUp);
                 window.addEventListener('touchcancel', handlePointerUp);
             }
-            resizeGame();
+            
             startGame();
         }
 
