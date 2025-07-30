@@ -112,23 +112,7 @@
             z-index: 2;
         }
 
-        /* --- NEW: LCD Bleed Effect --- */
-        #main-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            /* Add a layered inset shadow to simulate light bleed from the edges. */
-            /* The glow-color is inherited from the current wave's theme. */
-            box-shadow: inset 0 0 20px 5px var(--glow-color);
-            opacity: 0.2; /* Keep it subtle */
-            pointer-events: none;
-            z-index: 2; /* Position it on top of the game canvas, but below the UI. */
-        }
-
-        #main-container::after {
+        #crt-overlay::after {
             content: "";
             position: absolute;
             top: 0;
@@ -137,17 +121,18 @@
             height: 100%;
             background: rgba(18, 16, 16, 0.1);
             opacity: 0;
-            z-index: 1000;
-            animation: flicker 0.15s infinite;
-            box-shadow: inset 0 0 2cm rgba(0,0,0,0.8);
-            pointer-events: none;
+            animation: flicker 4s infinite;
+            box-shadow: inset 0 0 2cm rgba(0,0,0,0.8), inset 0 0 20px 5px var(--glow-color);
+            z-index: 1;
         }
 
         @keyframes flicker {
-            0% { opacity: 0.1; }
-            20% { opacity: 1; }
-            80% { opacity: 0.3; }
-            100% { opacity: 1; }
+            0% { opacity: 0.15; }
+            1% { opacity: 0.1; }
+            2% { opacity: 0.2; }
+            3% { opacity: 0.12; }
+            4% { opacity: 0.15; }
+            100% { opacity: 0.15; }
         }
 
 
@@ -298,7 +283,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 3; /* Adjusted for bleed effect */
+            z-index: 3; 
             pointer-events: none;
             display: flex;
             flex-direction: column;
@@ -385,7 +370,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 4; /* Adjusted for bleed effect */
+            z-index: 4; 
             text-align: center;
             pointer-events: all;
             background: black;
@@ -417,7 +402,7 @@
             left: 0;
             width: 100%;
             height: 35%;
-            z-index: 5; /* Adjusted for bleed effect */
+            z-index: 5; 
             display: none;
             pointer-events: none;
         }
@@ -1261,33 +1246,33 @@
                         });
                     }
                 }
-                draw() {
-                    ctx.strokeStyle = hexToRgba(glowColor, 0.3);
-                    ctx.lineWidth = 1;
-                    ctx.shadowColor = glowColor;
-                    ctx.shadowBlur = 10;
+                draw(targetCtx) { // Accept a context to draw on
+                    targetCtx.strokeStyle = hexToRgba(glowColor, 0.3);
+                    targetCtx.lineWidth = 1;
+                    targetCtx.shadowColor = glowColor;
+                    targetCtx.shadowBlur = 10;
                     if (this.points.length > 0) {
-                        ctx.beginPath();
-                        ctx.moveTo(this.points[0].x, this.points[0].y2);
-                        for (let i = 1; i < this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y2);
-                        ctx.stroke();
-                        ctx.beginPath();
-                        ctx.moveTo(this.points[0].x, this.points[0].y1);
-                        for (let i = 1; i < this.points.length; i++) ctx.lineTo(this.points[i].x, this.points[i].y1);
-                        ctx.stroke();
-                        ctx.beginPath();
+                        targetCtx.beginPath();
+                        targetCtx.moveTo(this.points[0].x, this.points[0].y2);
+                        for (let i = 1; i < this.points.length; i++) targetCtx.lineTo(this.points[i].x, this.points[i].y2);
+                        targetCtx.stroke();
+                        targetCtx.beginPath();
+                        targetCtx.moveTo(this.points[0].x, this.points[0].y1);
+                        for (let i = 1; i < this.points.length; i++) targetCtx.lineTo(this.points[i].x, this.points[i].y1);
+                        targetCtx.stroke();
+                        targetCtx.beginPath();
                         for (let i = 0; i < this.points.length; i++) {
-                            ctx.moveTo(this.points[i].x, this.points[i].y1);
-                            ctx.lineTo(this.points[i].x, height);
+                            targetCtx.moveTo(this.points[i].x, this.points[i].y1);
+                            targetCtx.lineTo(this.points[i].x, height);
                         }
                         for (let y = height; y > height * 0.6; y -= 20) {
-                            ctx.moveTo(0, y);
-                            ctx.lineTo(width, y);
+                            targetCtx.moveTo(0, y);
+                            targetCtx.lineTo(width, y);
                         }
-                        ctx.strokeStyle = hexToRgba(glowColor, 0.1);
-                        ctx.stroke();
+                        targetCtx.strokeStyle = hexToRgba(glowColor, 0.1);
+                        targetCtx.stroke();
                     }
-                    ctx.shadowBlur = 0;
+                    targetCtx.shadowBlur = 0;
                 }
             }
             class DataStorm {
@@ -1312,14 +1297,14 @@
                         }
                     });
                 }
-                draw() {
-                    ctx.fillStyle = hexToRgba(playerMainColor, 0.5);
+                draw(targetCtx) { // Accept a context to draw on
+                    targetCtx.fillStyle = hexToRgba(playerMainColor, 0.5);
                     this.particles.forEach(p => {
                         const scale = width / (width + p.z);
                         const x2d = (p.x - width / 2) * scale + width / 2;
                         const y2d = (p.y - height / 2) * scale + height / 2;
                         const size = scale * p.size;
-                        ctx.fillRect(x2d, y2d, size, size);
+                        targetCtx.fillRect(x2d, y2d, size, size);
                     });
                 }
             }
@@ -1697,8 +1682,8 @@
             function draw() {
                 ctx.clearRect(0, 0, width, height);
                 ctx.imageSmoothingEnabled = false;
-                if (dataStorm) dataStorm.draw(); 
-                if (landscape) landscape.draw();
+                if (dataStorm) dataStorm.draw(ctx); 
+                if (landscape) landscape.draw(ctx);
                 if (uplinkZone) uplinkZone.draw();
                 
                 drawWaveBackground();
